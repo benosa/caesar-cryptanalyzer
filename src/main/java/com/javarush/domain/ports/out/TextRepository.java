@@ -1,10 +1,19 @@
 package com.javarush.domain.ports.out;
 
+import java.io.BufferedReader;
+import java.io.BufferedWriter;
+
 public interface TextRepository {
 
-    String readText(String path);
+    // Для режимов, которым нужен весь текст (brute force, статистика)
+    String readAll(String path);
 
-    void writeText(String path, String content);
+    void writeAll(String path, String content);
+
+    // Для потоковой обработки больших файлов (encrypt/decrypt)
+    BufferedReader openReader(String path);
+
+    BufferedWriter openWriter(String path);
 
     boolean exists(String path);
 }
