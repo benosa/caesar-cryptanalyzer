@@ -3,13 +3,14 @@ package com.javarush.domain;
 import com.javarush.application.errors.FileProcessingException;
 import com.javarush.application.errors.InvalidInputException;
 import com.javarush.domain.aggregates.Alphabet;
+import com.javarush.domain.ports.in.CipherService;
 import com.javarush.domain.ports.out.TextRepository;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.IOException;
 
-public class FileService {
+public class FileService  implements CipherService {
 
     private final TextRepository textRepository;
     private final Alphabet alphabet = new Alphabet();

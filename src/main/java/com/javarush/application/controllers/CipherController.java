@@ -1,12 +1,13 @@
 package com.javarush.application.controllers;
 
 import com.javarush.domain.FileService;
+import com.javarush.domain.ports.in.CipherService;
 
 public class CipherController {
 
-    private final FileService fileService;
+    private final CipherService fileService;
 
-    public CipherController(FileService fileService) {
+    public CipherController(CipherService fileService) {
         this.fileService = fileService;
     }
 
