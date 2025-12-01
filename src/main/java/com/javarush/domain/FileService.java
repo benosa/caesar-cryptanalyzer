@@ -1,38 +1,72 @@
 package com.javarush.domain;
 
-import com.javarush.infrastructure.repository.FileSystemRepository;
-
-import java.io.IOException;
+import com.javarush.domain.aggregates.Alphabet;
+import com.javarush.domain.ports.out.TextRepository;
 
 public class FileService {
 
-    private final FileSystemRepository fileRepository;
+    private final TextRepository textRepository;
+    private final Alphabet alphabet = new Alphabet();
 
-    public FileService(FileSystemRepository fileRepository) {
-        this.fileRepository = fileRepository;
+    public FileService(TextRepository textRepository) {
+        this.textRepository = textRepository;
     }
 
-    public void encrypt(String sourcePath, String destPath, int key) throws IOException {
-        String text = fileRepository.readAll(sourcePath);
+    public void encryptFile(String sourcePath, String destPath, int key) {
+        validatePaths(sourcePath, destPath);
+        validateKey(key);
+
+        String text = textRepository.readText(sourcePath);
         String encrypted = encryptText(text, key);
-        fileRepository.writeAll(destPath, encrypted);
+        textRepository.writeText(destPath, encrypted);
     }
 
-    public void decrypt(String sourcePath, String destPath, int key) throws IOException {
-        String text = fileRepository.readAll(sourcePath);
+    public void decryptFile(String sourcePath, String destPath, int key) {
+        validatePaths(sourcePath, destPath);
+        validateKey(key);
+
+        String text = textRepository.readText(sourcePath);
         String decrypted = decryptText(text, key);
-        fileRepository.writeAll(destPath, decrypted);
+        textRepository.writeText(destPath, decrypted);
     }
-
-    // дальше добавишь bruteForce() и statisticalDecrypt()
 
     private String encryptText(String text, int key) {
-        // тут будет логика шифра Цезаря
-        return text; // временный заглушка
+        StringBuilder sb = new StringBuilder(text.length());
+        for (char ch : text.toCharArray()) {
+            // приведение к нижнему, если работаешь в нижнем регистре
+            char lower = Character.toLowerCase(ch);
+            char shifted = alphabet.shift(lower, key);
+            sb.append(shifted);
+        }
+        return sb.toString();
     }
 
     private String decryptText(String text, int key) {
-        // тут обратный сдвиг
-        return text; // временный заглушка
+        StringBuilder sb = new StringBuilder(text.length());
+        for (char ch : text.toCharArray()) {
+            char lower = Character.toLowerCase(ch);
+            char shifted = alphabet.unshift(lower, key);
+            sb.append(shifted);
+        }
+        return sb.toString();
+    }
+
+    private void validatePaths(String sourcePath, String destPath) {
+        if (sourcePath == null || sourcePath.isBlank()) {
+            throw new IllegalArgumentException("Не указан путь к исходному файлу");
+        }
+        if (destPath == null || destPath.isBlank()) {
+            throw new IllegalArgumentException("Не указан путь к выходному файлу");
+        }
+        if (!textRepository.exists(sourcePath)) {
+            throw new IllegalArgumentException("Исходный файл не существует: " + sourcePath);
+        }
+    }
+
+    private void validateKey(int key) {
+        if (key < 0) {
+            throw new IllegalArgumentException("Ключ должен быть неотрицательным");
+        }
+        // можно ужать ключ по модулю алфавита
     }
 }
