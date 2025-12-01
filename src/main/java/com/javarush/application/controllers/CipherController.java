@@ -36,4 +36,14 @@ public class CipherController {
             System.err.println("Ошибка при brute force расшифровке: " + e.getMessage());
         }
     }
+
+    public void statisticalDecrypt(String src, String dest, String samplePath) {
+        try {
+            fileService.statisticalDecryptFile(src, dest, samplePath);
+            System.out.println("Статистическая расшифровка завершена. Результат записан в файл: " + dest);
+        } catch (Exception e) {
+            System.err.println("Ошибка при статистической расшифровке: " + e.getMessage());
+        }
+    }
+
 }

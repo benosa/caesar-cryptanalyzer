@@ -60,6 +60,36 @@ public class FileService {
         System.out.println("Brute force: найден ключ " + bestKey);
     }
 
+    public void statisticalDecryptFile(String sourcePath, String destPath, String samplePath) {
+        validatePaths(sourcePath, destPath);
+
+        if (samplePath == null || samplePath.isBlank() || !textRepository.exists(samplePath)) {
+            throw new IllegalArgumentException("Для статистического анализа нужен репрезентативный файл.");
+        }
+
+        String encrypted = textRepository.readText(sourcePath);
+        String sample = textRepository.readText(samplePath);
+
+        double[] encryptedFreq = buildFrequencies(encrypted);
+        double[] sampleFreq = buildFrequencies(sample);
+
+        int bestKey = 0;
+        double bestScore = Double.POSITIVE_INFINITY; // ищем МИНИМАЛЬНОЕ отклонение
+
+        for (int key = 0; key < alphabet.size(); key++) {
+            double diff = diffForShift(encryptedFreq, sampleFreq, key);
+            if (diff < bestScore) {
+                bestScore = diff;
+                bestKey = key;
+            }
+        }
+
+        String decrypted = decryptText(encrypted, bestKey);
+        textRepository.writeText(destPath, decrypted);
+        System.out.println("Statistical: найден ключ " + bestKey);
+    }
+
+
     private String encryptText(String text, int key) {
         StringBuilder sb = new StringBuilder(text.length());
         for (char ch : text.toCharArray()) {
@@ -132,8 +162,6 @@ public class FileService {
         for (char ch : text.toCharArray()) {
             char c = Character.toLowerCase(ch);
             if (alphabet.contains(c)) {
-                // индекс из alphabet
-                // чтобы не лезть в приватную мапу, можно добавить в Alphabet метод indexOf()
                 int idx = alphabet.indexOf(c);
                 if (idx >= 0) {
                     freq[idx]++;
@@ -148,4 +176,16 @@ public class FileService {
         }
         return freq;
     }
+
+    private double diffForShift(double[] encryptedFreq, double[] sampleFreq, int shift) {
+        double sse = 0.0;
+        int n = encryptedFreq.length;
+        for (int i = 0; i < n; i++) {
+            int shiftedIndex = Math.floorMod(i + shift, n);
+            double d = encryptedFreq[shiftedIndex] - sampleFreq[i];
+            sse += d * d;
+        }
+        return sse;
+    }
+
 }
