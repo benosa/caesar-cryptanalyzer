@@ -1,20 +1,32 @@
 package com.javarush.infrastructure.repository;
 
-import java.io.IOException;
+import com.javarush.domain.ports.out.TextRepository;
+
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 
-public class FileSystemRepository {
+public class FileSystemRepository implements TextRepository {
 
-    public String readAll(String path) throws IOException {
-        return Files.readString(Path.of(path), StandardCharsets.UTF_8);
+    @Override
+    public String readText(String path) {
+        try {
+            return Files.readString(Path.of(path), StandardCharsets.UTF_8);
+        } catch (Exception e) {
+            throw new RuntimeException("Ошибка чтения файла: " + path, e);
+        }
     }
 
-    public void writeAll(String path, String content) throws IOException {
-        Files.writeString(Path.of(path), content, StandardCharsets.UTF_8);
+    @Override
+    public void writeText(String path, String content) {
+        try {
+            Files.writeString(Path.of(path), content, StandardCharsets.UTF_8);
+        } catch (Exception e) {
+            throw new RuntimeException("Ошибка записи файла: " + path, e);
+        }
     }
 
+    @Override
     public boolean exists(String path) {
         return Files.exists(Path.of(path));
     }
