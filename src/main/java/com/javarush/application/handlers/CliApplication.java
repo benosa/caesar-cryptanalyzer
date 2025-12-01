@@ -29,6 +29,7 @@ public class CliApplication implements Runnable {
             switch (choice) {
                 case "1" -> handleEncrypt(scanner);
                 case "2" -> handleDecrypt(scanner);
+                case "3" -> handleBruteForce(scanner);
                 case "0" -> {
                     System.out.println("Выход.");
                     return;
@@ -43,8 +44,7 @@ public class CliApplication implements Runnable {
         System.out.println("=== Caesar Cryptanalyzer ===");
         System.out.println("1. Шифрование файла");
         System.out.println("2. Расшифровка файла с ключом");
-        // потом добавишь:
-        // System.out.println("3. Brute force");
+        System.out.println("3. Brute force");
         // System.out.println("4. Статистический анализ");
         System.out.println("0. Выход");
         System.out.print("Выбор: ");
@@ -74,5 +74,21 @@ public class CliApplication implements Runnable {
         int key = Integer.parseInt(scanner.nextLine().trim());
 
         cipherController.decrypt(src, dest, key);
+    }
+
+    private void handleBruteForce(Scanner scanner) {
+        System.out.print("Путь к зашифрованному файлу: ");
+        String src = scanner.nextLine().trim();
+
+        System.out.print("Путь к выходному файлу: ");
+        String dest = scanner.nextLine().trim();
+
+        System.out.print("Путь к репрезентативному файлу (Enter, если нет): ");
+        String sample = scanner.nextLine().trim();
+        if (sample.isBlank()) {
+            sample = null;
+        }
+
+        cipherController.bruteForce(src, dest, sample);
     }
 }

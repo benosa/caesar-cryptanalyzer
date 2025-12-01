@@ -48,4 +48,10 @@ public class Alphabet {
         int newIndex = Math.floorMod(idx - key, ALPHABET.length);
         return ALPHABET[newIndex];
     }
+
+    public int indexOf(char ch) {
+        Integer idx = INDEX.get(ch);
+        return idx == null ? -1 : idx;
+    }
+
 }

@@ -27,4 +27,13 @@ public class CipherController {
             System.err.println("Ошибка при расшифровке: " + e.getMessage());
         }
     }
+
+    public void bruteForce(String src, String dest, String samplePath) {
+        try {
+            fileService.bruteForceDecryptFile(src, dest, samplePath);
+            System.out.println("Brute force расшифровка завершена. Результат записан в файл: " + dest);
+        } catch (Exception e) {
+            System.err.println("Ошибка при brute force расшифровке: " + e.getMessage());
+        }
+    }
 }

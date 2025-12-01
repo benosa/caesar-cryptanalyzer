@@ -30,6 +30,36 @@ public class FileService {
         textRepository.writeText(destPath, decrypted);
     }
 
+    public void bruteForceDecryptFile(String sourcePath, String destPath, String samplePath) {
+        validatePaths(sourcePath, destPath);
+
+        String encrypted = textRepository.readText(sourcePath);
+        String sample = null;
+        if (samplePath != null && !samplePath.isBlank() && textRepository.exists(samplePath)) {
+            sample = textRepository.readText(samplePath);
+        }
+
+        int bestKey = 0;
+        double bestScore = Double.NEGATIVE_INFINITY;
+        String bestText = encrypted;
+
+        for (int key = 0; key < alphabet.size(); key++) {
+            String candidate = decryptText(encrypted, key);
+            double score = (sample != null)
+                    ? scoreBySample(candidate, sample)
+                    : scoreSimple(candidate);
+
+            if (score > bestScore) {
+                bestScore = score;
+                bestKey = key;
+                bestText = candidate;
+            }
+        }
+
+        textRepository.writeText(destPath, bestText);
+        System.out.println("Brute force: найден ключ " + bestKey);
+    }
+
     private String encryptText(String text, int key) {
         StringBuilder sb = new StringBuilder(text.length());
         for (char ch : text.toCharArray()) {
@@ -68,5 +98,54 @@ public class FileService {
             throw new IllegalArgumentException("Ключ должен быть неотрицательным");
         }
         // можно ужать ключ по модулю алфавита
+    }
+
+    // Простейшая эвристика: считаем пробелы и "типичные" буквы
+    private double scoreSimple(String text) {
+        int score = 0;
+        for (char ch : text.toCharArray()) {
+            char c = Character.toLowerCase(ch);
+            if (c == ' ') score += 3;
+            if (c == 'о' || c == 'е' || c == 'а' || c == 'и' || c == 'н') score += 1;
+            if (c == '.' || c == ',' || c == '!' || c == '?') score += 2;
+        }
+        return score;
+    }
+
+    // Если есть репрезентативный текст — сравниваем частоты символов
+    private double scoreBySample(String candidate, String sample) {
+        double[] freqCandidate = buildFrequencies(candidate);
+        double[] freqSample = buildFrequencies(sample);
+
+        // используем минус сумму квадратов отклонения (чем ближе, тем больше score)
+        double sse = 0.0;
+        for (int i = 0; i < freqCandidate.length; i++) {
+            double d = freqCandidate[i] - freqSample[i];
+            sse += d * d;
+        }
+        return -sse;
+    }
+
+    private double[] buildFrequencies(String text) {
+        double[] freq = new double[alphabet.size()];
+        int total = 0;
+        for (char ch : text.toCharArray()) {
+            char c = Character.toLowerCase(ch);
+            if (alphabet.contains(c)) {
+                // индекс из alphabet
+                // чтобы не лезть в приватную мапу, можно добавить в Alphabet метод indexOf()
+                int idx = alphabet.indexOf(c);
+                if (idx >= 0) {
+                    freq[idx]++;
+                    total++;
+                }
+            }
+        }
+        if (total > 0) {
+            for (int i = 0; i < freq.length; i++) {
+                freq[i] /= total;
+            }
+        }
+        return freq;
     }
 }
