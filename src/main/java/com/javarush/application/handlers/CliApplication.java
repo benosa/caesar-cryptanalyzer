@@ -4,6 +4,7 @@ import com.javarush.application.controllers.CipherController;
 import com.javarush.application.errors.CryptanalyzerException;
 import com.javarush.application.errors.FileProcessingException;
 import com.javarush.application.errors.InvalidInputException;
+import com.javarush.application.validators.InputValidator;
 import picocli.CommandLine.Command;
 
 import java.util.Scanner;
@@ -16,6 +17,7 @@ import java.util.Scanner;
 public class CliApplication implements Runnable {
 
     private final CipherController cipherController;
+    private final InputValidator inputValidator = new InputValidator();
 
     public CliApplication(CipherController cipherController) {
         this.cipherController = cipherController;
@@ -54,8 +56,6 @@ public class CliApplication implements Runnable {
         System.out.print("Выбор: ");
     }
 
-    // ========= обёртки с обработкой ошибок =========
-
     private void safeEncrypt(Scanner scanner) {
         try {
             handleEncrypt(scanner);
@@ -66,12 +66,11 @@ public class CliApplication implements Runnable {
             System.err.println("[FILE ERROR] " + e.getMessage());
         } catch (CryptanalyzerException e) {
             System.err.println("[ERROR] " + e.getMessage());
-        } catch (NumberFormatException e) {
-            System.err.println("[INPUT ERROR] Ключ должен быть целым числом.");
         } catch (Exception e) {
             System.err.println("[INTERNAL ERROR] " + e.getMessage());
         }
     }
+
 
     private void safeDecrypt(Scanner scanner) {
         try {
@@ -83,8 +82,6 @@ public class CliApplication implements Runnable {
             System.err.println("[FILE ERROR] " + e.getMessage());
         } catch (CryptanalyzerException e) {
             System.err.println("[ERROR] " + e.getMessage());
-        } catch (NumberFormatException e) {
-            System.err.println("[INPUT ERROR] Ключ должен быть целым числом.");
         } catch (Exception e) {
             System.err.println("[INTERNAL ERROR] " + e.getMessage());
         }
@@ -120,44 +117,42 @@ public class CliApplication implements Runnable {
         }
     }
 
-    // ========= "чистые" хэндлеры без try/catch =========
-
     private void handleEncrypt(Scanner scanner) {
         System.out.print("Путь к исходному файлу: ");
-        String src = scanner.nextLine().trim();
+        String src = inputValidator.requirePath(scanner.nextLine(), "путь к исходному файлу");
 
         System.out.print("Путь к выходному файлу: ");
-        String dest = scanner.nextLine().trim();
+        String dest = inputValidator.requirePath(scanner.nextLine(), "путь к выходному файлу");
 
         System.out.print("Ключ (целое число): ");
-        int key = Integer.parseInt(scanner.nextLine().trim());
+        int key = inputValidator.parseKey(scanner.nextLine());
 
         cipherController.encrypt(src, dest, key);
     }
 
     private void handleDecrypt(Scanner scanner) {
         System.out.print("Путь к зашифрованному файлу: ");
-        String src = scanner.nextLine().trim();
+        String src = inputValidator.requirePath(scanner.nextLine(), "путь к зашифрованному файлу");
 
         System.out.print("Путь к выходному файлу: ");
-        String dest = scanner.nextLine().trim();
+        String dest = inputValidator.requirePath(scanner.nextLine(), "путь к выходному файлу");
 
         System.out.print("Ключ (целое число): ");
-        int key = Integer.parseInt(scanner.nextLine().trim());
+        int key = inputValidator.parseKey(scanner.nextLine());
 
         cipherController.decrypt(src, dest, key);
     }
 
     private void handleBruteForce(Scanner scanner) {
         System.out.print("Путь к зашифрованному файлу: ");
-        String src = scanner.nextLine().trim();
+        String src = inputValidator.requirePath(scanner.nextLine(), "путь к зашифрованному файлу");
 
         System.out.print("Путь к выходному файлу: ");
-        String dest = scanner.nextLine().trim();
+        String dest = inputValidator.requirePath(scanner.nextLine(), "путь к выходному файлу");
 
         System.out.print("Путь к репрезентативному файлу (Enter, если нет): ");
-        String sample = scanner.nextLine().trim();
-        if (sample.isBlank()) {
+        String sample = scanner.nextLine();
+        if (sample != null && sample.isBlank()) {
             sample = null;
         }
 
@@ -166,13 +161,13 @@ public class CliApplication implements Runnable {
 
     private void handleStatistical(Scanner scanner) {
         System.out.print("Путь к зашифрованному файлу: ");
-        String src = scanner.nextLine().trim();
+        String src = inputValidator.requirePath(scanner.nextLine(), "путь к зашифрованному файлу");
 
         System.out.print("Путь к выходному файлу: ");
-        String dest = scanner.nextLine().trim();
+        String dest = inputValidator.requirePath(scanner.nextLine(), "путь к выходному файлу");
 
         System.out.print("Путь к репрезентативному файлу: ");
-        String sample = scanner.nextLine().trim();
+        String sample = inputValidator.requirePath(scanner.nextLine(), "путь к репрезентативному файлу");
 
         cipherController.statisticalDecrypt(src, dest, sample);
     }
