@@ -3,6 +3,8 @@ package com.javarush.infrastructure.configuration;
 import com.javarush.application.controllers.CipherController;
 import com.javarush.application.handlers.CliApplication;
 import com.javarush.domain.FileService;
+import com.javarush.domain.ports.in.CipherService;
+import com.javarush.domain.ports.out.TextRepository;
 import com.javarush.infrastructure.repository.FileSystemRepository;
 
 import java.util.HashMap;
@@ -43,10 +45,10 @@ public class IoCContainer {
 
     private void registerBeans() {
         // Репозиторий работы с файлами (инфраструктура)
-        FileSystemRepository fileSystemRepository = new FileSystemRepository();
+        TextRepository fileSystemRepository = new FileSystemRepository();
 
         // Доменный сервис
-        FileService fileService = new FileService(fileSystemRepository);
+        CipherService fileService = new FileService(fileSystemRepository);
 
         // Контроллер
         CipherController cipherController = new CipherController(fileService);
@@ -55,7 +57,7 @@ public class IoCContainer {
         CliApplication cliApplication = new CliApplication(cipherController);
 
         // Регистрация бинов
-        beans.put(FileSystemRepository.class, fileSystemRepository);
+        beans.put(TextRepository.class, fileSystemRepository);
         beans.put(FileService.class, fileService);
         beans.put(CipherController.class, cipherController);
         beans.put(CliApplication.class, cliApplication);
