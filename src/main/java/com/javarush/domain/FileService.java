@@ -1,7 +1,13 @@
 package com.javarush.domain;
 
+import com.javarush.application.errors.FileProcessingException;
+import com.javarush.application.errors.InvalidInputException;
 import com.javarush.domain.aggregates.Alphabet;
 import com.javarush.domain.ports.out.TextRepository;
+
+import java.io.BufferedReader;
+import java.io.BufferedWriter;
+import java.io.IOException;
 
 public class FileService {
 
@@ -12,35 +18,65 @@ public class FileService {
         this.textRepository = textRepository;
     }
 
+    // ================== БОЛЬШИЕ ФАЙЛЫ: ШИФРОВАНИЕ ==================
+
     public void encryptFile(String sourcePath, String destPath, int key) {
         validatePaths(sourcePath, destPath);
         validateKey(key);
 
-        String text = textRepository.readText(sourcePath);
-        String encrypted = encryptText(text, key);
-        textRepository.writeText(destPath, encrypted);
+        try (BufferedReader reader = textRepository.openReader(sourcePath);
+             BufferedWriter writer = textRepository.openWriter(destPath)) {
+
+            int ch;
+            while ((ch = reader.read()) != -1) {
+                char original = (char) ch;
+                char processed = encryptChar(original, key);
+                writer.write(processed);
+            }
+
+        } catch (IOException e) {
+            throw new FileProcessingException(
+                    "Ошибка при шифровании файла: " + sourcePath + " -> " + destPath, e
+            );
+        }
     }
+
+    // ================== БОЛЬШИЕ ФАЙЛЫ: ДЕШИФРОВАНИЕ ==================
 
     public void decryptFile(String sourcePath, String destPath, int key) {
         validatePaths(sourcePath, destPath);
         validateKey(key);
 
-        String text = textRepository.readText(sourcePath);
-        String decrypted = decryptText(text, key);
-        textRepository.writeText(destPath, decrypted);
+        try (BufferedReader reader = textRepository.openReader(sourcePath);
+             BufferedWriter writer = textRepository.openWriter(destPath)) {
+
+            int ch;
+            while ((ch = reader.read()) != -1) {
+                char original = (char) ch;
+                char processed = decryptChar(original, key);
+                writer.write(processed);
+            }
+
+        } catch (IOException e) {
+            throw new FileProcessingException(
+                    "Ошибка при расшифровке файла: " + sourcePath + " -> " + destPath, e
+            );
+        }
     }
+
+    // ================== BRUTE FORCE (ЧИТАЕМ ЦЕЛИКОМ) ==================
 
     public void bruteForceDecryptFile(String sourcePath, String destPath, String samplePath) {
         validatePaths(sourcePath, destPath);
 
-        String encrypted = textRepository.readText(sourcePath);
+        String encrypted = textRepository.readAll(sourcePath);
         String sample = null;
 
         if (samplePath != null && !samplePath.isBlank()) {
             if (!textRepository.exists(samplePath)) {
                 throw new InvalidInputException("Репрезентативный файл не существует: " + samplePath);
             }
-            sample = textRepository.readText(samplePath);
+            sample = textRepository.readAll(samplePath);
         }
 
         int bestKey = 0;
@@ -60,8 +96,11 @@ public class FileService {
             }
         }
 
-        textRepository.writeText(destPath, bestText);
+        textRepository.writeAll(destPath, bestText);
+        // bestKey можно логировать/возвращать, если потребуется
     }
+
+    // ================== СТАТИСТИЧЕСКИЙ АНАЛИЗ (ЧИТАЕМ ЦЕЛИКОМ) ==================
 
     public void statisticalDecryptFile(String sourcePath, String destPath, String samplePath) {
         validatePaths(sourcePath, destPath);
@@ -73,8 +112,8 @@ public class FileService {
             throw new InvalidInputException("Репрезентативный файл не существует: " + samplePath);
         }
 
-        String encrypted = textRepository.readText(sourcePath);
-        String sample = textRepository.readText(samplePath);
+        String encrypted = textRepository.readAll(sourcePath);
+        String sample = textRepository.readAll(samplePath);
 
         double[] encryptedFreq = buildFrequencies(encrypted);
         double[] sampleFreq = buildFrequencies(sample);
@@ -91,17 +130,42 @@ public class FileService {
         }
 
         String decrypted = decryptText(encrypted, bestKey);
-        textRepository.writeText(destPath, decrypted);
+        textRepository.writeAll(destPath, decrypted);
     }
 
+    // ================== РАБОТА С ОДНИМ СИМВОЛОМ ==================
+
+    private char encryptChar(char ch, int key) {
+        char lower = Character.toLowerCase(ch);
+        if (!alphabet.contains(lower)) {
+            // символ не из алфавита — не трогаем
+            return ch;
+        }
+        char shifted = alphabet.shift(lower, key);
+        if (Character.isUpperCase(ch)) {
+            return Character.toUpperCase(shifted);
+        }
+        return shifted;
+    }
+
+    private char decryptChar(char ch, int key) {
+        char lower = Character.toLowerCase(ch);
+        if (!alphabet.contains(lower)) {
+            return ch;
+        }
+        char shifted = alphabet.unshift(lower, key);
+        if (Character.isUpperCase(ch)) {
+            return Character.toUpperCase(shifted);
+        }
+        return shifted;
+    }
+
+    // ================== РАБОТА СО СТРОКАМИ (ДЛЯ BRUTE/СТАТИСТИКИ) ==================
 
     private String encryptText(String text, int key) {
         StringBuilder sb = new StringBuilder(text.length());
         for (char ch : text.toCharArray()) {
-            // приведение к нижнему, если работаешь в нижнем регистре
-            char lower = Character.toLowerCase(ch);
-            char shifted = alphabet.shift(lower, key);
-            sb.append(shifted);
+            sb.append(encryptChar(ch, key));
         }
         return sb.toString();
     }
@@ -109,12 +173,12 @@ public class FileService {
     private String decryptText(String text, int key) {
         StringBuilder sb = new StringBuilder(text.length());
         for (char ch : text.toCharArray()) {
-            char lower = Character.toLowerCase(ch);
-            char shifted = alphabet.unshift(lower, key);
-            sb.append(shifted);
+            sb.append(decryptChar(ch, key));
         }
         return sb.toString();
     }
+
+    // ================== ВАЛИДАЦИЯ ==================
 
     private void validatePaths(String sourcePath, String destPath) {
         if (sourcePath == null || sourcePath.isBlank()) {
@@ -134,7 +198,8 @@ public class FileService {
         }
     }
 
-    // Простейшая эвристика: считаем пробелы и "типичные" буквы
+    // ================== ЭВРИСТИКА ДЛЯ BRUTE FORCE ==================
+
     private double scoreSimple(String text) {
         int score = 0;
         for (char ch : text.toCharArray()) {
@@ -146,19 +211,19 @@ public class FileService {
         return score;
     }
 
-    // Если есть репрезентативный текст — сравниваем частоты символов
     private double scoreBySample(String candidate, String sample) {
         double[] freqCandidate = buildFrequencies(candidate);
         double[] freqSample = buildFrequencies(sample);
 
-        // используем минус сумму квадратов отклонения (чем ближе, тем больше score)
         double sse = 0.0;
         for (int i = 0; i < freqCandidate.length; i++) {
             double d = freqCandidate[i] - freqSample[i];
             sse += d * d;
         }
-        return -sse;
+        return -sse; // чем меньше отклонение, тем выше score
     }
+
+    // ================== СТАТИСТИКА ЧАСТОТ ==================
 
     private double[] buildFrequencies(String text) {
         double[] freq = new double[alphabet.size()];
@@ -191,5 +256,4 @@ public class FileService {
         }
         return sse;
     }
-
 }
