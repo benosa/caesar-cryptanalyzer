@@ -30,6 +30,7 @@ public class CliApplication implements Runnable {
                 case "1" -> handleEncrypt(scanner);
                 case "2" -> handleDecrypt(scanner);
                 case "3" -> handleBruteForce(scanner);
+                case "4" -> handleStatistical(scanner);
                 case "0" -> {
                     System.out.println("Выход.");
                     return;
@@ -45,7 +46,7 @@ public class CliApplication implements Runnable {
         System.out.println("1. Шифрование файла");
         System.out.println("2. Расшифровка файла с ключом");
         System.out.println("3. Brute force");
-        // System.out.println("4. Статистический анализ");
+        System.out.println("4. Статистический анализ");
         System.out.println("0. Выход");
         System.out.print("Выбор: ");
     }
@@ -91,4 +92,18 @@ public class CliApplication implements Runnable {
 
         cipherController.bruteForce(src, dest, sample);
     }
+
+    private void handleStatistical(Scanner scanner) {
+        System.out.print("Путь к зашифрованному файлу: ");
+        String src = scanner.nextLine().trim();
+
+        System.out.print("Путь к выходному файлу: ");
+        String dest = scanner.nextLine().trim();
+
+        System.out.print("Путь к репрезентативному файлу: ");
+        String sample = scanner.nextLine().trim();
+
+        cipherController.statisticalDecrypt(src, dest, sample);
+    }
+
 }
