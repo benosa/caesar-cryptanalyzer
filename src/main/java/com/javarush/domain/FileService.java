@@ -35,7 +35,11 @@ public class FileService {
 
         String encrypted = textRepository.readText(sourcePath);
         String sample = null;
-        if (samplePath != null && !samplePath.isBlank() && textRepository.exists(samplePath)) {
+
+        if (samplePath != null && !samplePath.isBlank()) {
+            if (!textRepository.exists(samplePath)) {
+                throw new InvalidInputException("Репрезентативный файл не существует: " + samplePath);
+            }
             sample = textRepository.readText(samplePath);
         }
 
@@ -57,14 +61,16 @@ public class FileService {
         }
 
         textRepository.writeText(destPath, bestText);
-        System.out.println("Brute force: найден ключ " + bestKey);
     }
 
     public void statisticalDecryptFile(String sourcePath, String destPath, String samplePath) {
         validatePaths(sourcePath, destPath);
 
-        if (samplePath == null || samplePath.isBlank() || !textRepository.exists(samplePath)) {
-            throw new IllegalArgumentException("Для статистического анализа нужен репрезентативный файл.");
+        if (samplePath == null || samplePath.isBlank()) {
+            throw new InvalidInputException("Для статистического анализа нужно указать путь к репрезентативному файлу.");
+        }
+        if (!textRepository.exists(samplePath)) {
+            throw new InvalidInputException("Репрезентативный файл не существует: " + samplePath);
         }
 
         String encrypted = textRepository.readText(sourcePath);
@@ -74,7 +80,7 @@ public class FileService {
         double[] sampleFreq = buildFrequencies(sample);
 
         int bestKey = 0;
-        double bestScore = Double.POSITIVE_INFINITY; // ищем МИНИМАЛЬНОЕ отклонение
+        double bestScore = Double.POSITIVE_INFINITY;
 
         for (int key = 0; key < alphabet.size(); key++) {
             double diff = diffForShift(encryptedFreq, sampleFreq, key);
@@ -86,7 +92,6 @@ public class FileService {
 
         String decrypted = decryptText(encrypted, bestKey);
         textRepository.writeText(destPath, decrypted);
-        System.out.println("Statistical: найден ключ " + bestKey);
     }
 
 
@@ -113,21 +118,20 @@ public class FileService {
 
     private void validatePaths(String sourcePath, String destPath) {
         if (sourcePath == null || sourcePath.isBlank()) {
-            throw new IllegalArgumentException("Не указан путь к исходному файлу");
-        }
-        if (destPath == null || destPath.isBlank()) {
-            throw new IllegalArgumentException("Не указан путь к выходному файлу");
+            throw new InvalidInputException("Не указан путь к исходному файлу.");
         }
         if (!textRepository.exists(sourcePath)) {
-            throw new IllegalArgumentException("Исходный файл не существует: " + sourcePath);
+            throw new InvalidInputException("Исходный файл не существует: " + sourcePath);
+        }
+        if (destPath == null || destPath.isBlank()) {
+            throw new InvalidInputException("Не указан путь к выходному файлу.");
         }
     }
 
     private void validateKey(int key) {
         if (key < 0) {
-            throw new IllegalArgumentException("Ключ должен быть неотрицательным");
+            throw new InvalidInputException("Ключ должен быть неотрицательным.");
         }
-        // можно ужать ключ по модулю алфавита
     }
 
     // Простейшая эвристика: считаем пробелы и "типичные" буквы

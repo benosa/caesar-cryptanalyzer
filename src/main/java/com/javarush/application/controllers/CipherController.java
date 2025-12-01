@@ -11,39 +11,18 @@ public class CipherController {
     }
 
     public void encrypt(String src, String dest, int key) {
-        try {
-            fileService.encryptFile(src, dest, key);
-            System.out.println("Шифрование завершено успешно.");
-        } catch (Exception e) {
-            System.err.println("Ошибка при шифровании: " + e.getMessage());
-        }
+        fileService.encryptFile(src, dest, key);
     }
 
     public void decrypt(String src, String dest, int key) {
-        try {
-            fileService.decryptFile(src, dest, key);
-            System.out.println("Расшифровка завершена успешно.");
-        } catch (Exception e) {
-            System.err.println("Ошибка при расшифровке: " + e.getMessage());
-        }
+        fileService.decryptFile(src, dest, key);
     }
 
     public void bruteForce(String src, String dest, String samplePath) {
-        try {
-            fileService.bruteForceDecryptFile(src, dest, samplePath);
-            System.out.println("Brute force расшифровка завершена. Результат записан в файл: " + dest);
-        } catch (Exception e) {
-            System.err.println("Ошибка при brute force расшифровке: " + e.getMessage());
-        }
+        fileService.bruteForceDecryptFile(src, dest, samplePath);
     }
 
     public void statisticalDecrypt(String src, String dest, String samplePath) {
-        try {
-            fileService.statisticalDecryptFile(src, dest, samplePath);
-            System.out.println("Статистическая расшифровка завершена. Результат записан в файл: " + dest);
-        } catch (Exception e) {
-            System.err.println("Ошибка при статистической расшифровке: " + e.getMessage());
-        }
+        fileService.statisticalDecryptFile(src, dest, samplePath);
     }
-
 }
