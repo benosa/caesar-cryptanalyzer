@@ -1,57 +1,59 @@
 package com.javarush.domain.aggregates;
 
-import java.util.HashMap;
-import java.util.Map;
-
+/**
+ * Алфавит для шифра Цезаря.
+ * Русские буквы + базовая пунктуация + пробел.
+ * Все в нижнем регистре, регистр восстанавливается в сервисе.
+ */
 public class Alphabet {
 
-    // Русский алфавит + знаки препинания, как в задании
     private static final char[] ALPHABET = {
-            'а','б','в','г','д','е','ж','з',
-            'и','к','л','м','н','о','п','р',
-            'с','т','у','ф','х','ц','ч','ш',
-            'щ','ъ','ы','ь','э','я',
-            '.', ',', '«', '»', '"', '\'', ':', '!', '?', ' '
+            'а', 'б', 'в', 'г', 'д', 'е', 'ж', 'з',
+            'и', 'й', 'к', 'л', 'м', 'н', 'о', 'п',
+            'р', 'с', 'т', 'у', 'ф', 'х', 'ц', 'ч',
+            'ш', 'щ', 'ъ', 'ы', 'ь', 'э', 'ю', 'я',
+            '.', ',', '«', '»', '"', '\'', ':', '-',
+            '!', '?', ' '
     };
-
-    private static final Map<Character, Integer> INDEX = new HashMap<>();
-
-    static {
-        for (int i = 0; i < ALPHABET.length; i++) {
-            INDEX.put(ALPHABET[i], i);
-        }
-    }
 
     public int size() {
         return ALPHABET.length;
     }
 
-    public boolean contains(char ch) {
-        return INDEX.containsKey(ch);
+    public boolean contains(char c) {
+        return indexOf(c) >= 0;
     }
 
-    public char shift(char ch, int key) {
-        Integer idx = INDEX.get(ch);
-        if (idx == null) {
-            // символ не в алфавите — можно возвращать как есть
-            return ch;
+    public int indexOf(char c) {
+        for (int i = 0; i < ALPHABET.length; i++) {
+            if (ALPHABET[i] == c) {
+                return i;
+            }
         }
-        int newIndex = Math.floorMod(idx + key, ALPHABET.length);
-        return ALPHABET[newIndex];
+        return -1;
     }
 
-    public char unshift(char ch, int key) {
-        Integer idx = INDEX.get(ch);
-        if (idx == null) {
-            return ch;
+    public char charAt(int index) {
+        return ALPHABET[index];
+    }
+
+    public char shift(char c, int key) {
+        int idx = indexOf(c);
+        if (idx < 0) {
+            return c;
         }
-        int newIndex = Math.floorMod(idx - key, ALPHABET.length);
-        return ALPHABET[newIndex];
+        int n = ALPHABET.length;
+        int shifted = Math.floorMod(idx + key, n);
+        return ALPHABET[shifted];
     }
 
-    public int indexOf(char ch) {
-        Integer idx = INDEX.get(ch);
-        return idx == null ? -1 : idx;
+    public char unshift(char c, int key) {
+        int idx = indexOf(c);
+        if (idx < 0) {
+            return c;
+        }
+        int n = ALPHABET.length;
+        int shifted = Math.floorMod(idx - key, n);
+        return ALPHABET[shifted];
     }
-
 }
