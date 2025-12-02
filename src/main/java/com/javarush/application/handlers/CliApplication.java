@@ -156,7 +156,9 @@ public class CliApplication implements Runnable {
             sample = null;
         }
 
-        cipherController.bruteForce(src, dest, sample);
+        int key = cipherController.bruteForce(src, dest, sample);
+
+        System.out.println("Ключ (целое число): " + key);
     }
 
     private void handleStatistical(Scanner scanner) {

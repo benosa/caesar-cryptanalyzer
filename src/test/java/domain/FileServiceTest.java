@@ -232,8 +232,8 @@ class FileServiceTest {
         when(textRepository.exists(sourcePath)).thenReturn(true);
         when(textRepository.exists(samplePath)).thenReturn(true);
 
-        when(textRepository.readAll(sourcePath)).thenReturn("зашифрованный текст");
-        when(textRepository.readAll(samplePath)).thenReturn("пример обычного текста");
+        when(textRepository.readAll(sourcePath)).thenReturn("зашифрованный текст".repeat(30));
+        when(textRepository.readAll(samplePath)).thenReturn("пример обычного текста".repeat(30));
 
         ArgumentCaptor<String> contentCaptor = ArgumentCaptor.forClass(String.class);
 

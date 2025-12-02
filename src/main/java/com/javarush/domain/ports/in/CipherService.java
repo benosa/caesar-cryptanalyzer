@@ -6,7 +6,7 @@ public interface CipherService {
 
     void decryptFile(String sourcePath, String destPath, int key);
 
-    void bruteForceDecryptFile(String sourcePath, String destPath, String samplePath);
+    int bruteForceDecryptFile(String sourcePath, String destPath, String samplePath);
 
     void statisticalDecryptFile(String sourcePath, String destPath, String samplePath);
 }

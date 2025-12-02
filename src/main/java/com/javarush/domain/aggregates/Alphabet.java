@@ -1,23 +1,23 @@
 package com.javarush.domain.aggregates;
 
-/**
- * Алфавит для шифра Цезаря.
- * Русские буквы + базовая пунктуация + пробел.
- * Все в нижнем регистре, регистр восстанавливается в сервисе.
- */
 public class Alphabet {
 
-    private static final char[] ALPHABET = {
-            'а', 'б', 'в', 'г', 'д', 'е', 'ж', 'з',
-            'и', 'й', 'к', 'л', 'м', 'н', 'о', 'п',
-            'р', 'с', 'т', 'у', 'ф', 'х', 'ц', 'ч',
-            'ш', 'щ', 'ъ', 'ы', 'ь', 'э', 'ю', 'я',
-            '.', ',', '«', '»', '"', '\'', ':', '-',
-            '!', '?', ' '
-    };
+    private final char[] chars;
+
+    // дефолт — на случай прямого использования в тестах/старом коде
+    public Alphabet() {
+        this("абвгдеёжзийклмнопрстуфхцчшщъыьэюя.,«»\"':-!? ");
+    }
+
+    public Alphabet(String alphabet) {
+        if (alphabet == null || alphabet.isEmpty()) {
+            throw new IllegalArgumentException("Alphabet string must not be null or empty");
+        }
+        this.chars = alphabet.toCharArray();
+    }
 
     public int size() {
-        return ALPHABET.length;
+        return chars.length;
     }
 
     public boolean contains(char c) {
@@ -25,8 +25,8 @@ public class Alphabet {
     }
 
     public int indexOf(char c) {
-        for (int i = 0; i < ALPHABET.length; i++) {
-            if (ALPHABET[i] == c) {
+        for (int i = 0; i < chars.length; i++) {
+            if (chars[i] == c) {
                 return i;
             }
         }
@@ -34,7 +34,7 @@ public class Alphabet {
     }
 
     public char charAt(int index) {
-        return ALPHABET[index];
+        return chars[index];
     }
 
     public char shift(char c, int key) {
@@ -42,9 +42,8 @@ public class Alphabet {
         if (idx < 0) {
             return c;
         }
-        int n = ALPHABET.length;
-        int shifted = Math.floorMod(idx + key, n);
-        return ALPHABET[shifted];
+        int newIndex = Math.floorMod(idx + key, chars.length);
+        return chars[newIndex];
     }
 
     public char unshift(char c, int key) {
@@ -52,8 +51,7 @@ public class Alphabet {
         if (idx < 0) {
             return c;
         }
-        int n = ALPHABET.length;
-        int shifted = Math.floorMod(idx - key, n);
-        return ALPHABET[shifted];
+        int newIndex = Math.floorMod(idx - key, chars.length);
+        return chars[newIndex];
     }
 }

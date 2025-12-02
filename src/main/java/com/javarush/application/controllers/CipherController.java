@@ -19,8 +19,8 @@ public class CipherController {
         fileService.decryptFile(src, dest, key);
     }
 
-    public void bruteForce(String src, String dest, String samplePath) {
-        fileService.bruteForceDecryptFile(src, dest, samplePath);
+    public int bruteForce(String src, String dest, String samplePath) {
+        return fileService.bruteForceDecryptFile(src, dest, samplePath);
     }
 
     public void statisticalDecrypt(String src, String dest, String samplePath) {

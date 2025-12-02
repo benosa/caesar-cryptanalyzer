@@ -3,6 +3,7 @@ package com.javarush.infrastructure.configuration;
 import com.javarush.application.controllers.CipherController;
 import com.javarush.application.handlers.CliApplication;
 import com.javarush.domain.FileService;
+import com.javarush.domain.aggregates.Alphabet;
 import com.javarush.domain.ports.in.CipherService;
 import com.javarush.domain.ports.out.TextRepository;
 import com.javarush.infrastructure.repository.FileSystemRepository;
@@ -44,21 +45,41 @@ public class IoCContainer {
     }
 
     private void registerBeans() {
-        // Репозиторий работы с файлами (инфраструктура)
-        TextRepository fileSystemRepository = new FileSystemRepository();
+        // 1. конфигурация
+        AppConfig config = AppConfig.load();
 
-        // Доменный сервис
-        CipherService fileService = new FileService(fileSystemRepository);
+        // 2. алфавит (доменная сущность)
+        Alphabet alphabet = new Alphabet(config.getAlphabet());
 
-        // Контроллер
+        // 3. репозиторий (инфраструктура)
+        TextRepository fileSystemRepository = new FileSystemRepository(
+                config.getCharset(),
+                config.getBufferSize()
+        );
+
+        // 4. доменный сервис, работающий через порты
+        CipherService fileService = new FileService(
+                fileSystemRepository,
+                alphabet,
+                config.getSpaceWeight(),
+                config.getVowelWeight(),
+                config.getPunctuationWeight(),
+                config.getFrequentLetters(),
+                config.getStatisticalMinTextLength()
+        );
+
+        // 5. контроллер (application layer)
         CipherController cipherController = new CipherController(fileService);
 
-        // CLI-приложение (root-команда Picocli)
+        // 6. CLI-приложение (handler / точка входа Picocli)
         CliApplication cliApplication = new CliApplication(cipherController);
 
         // Регистрация бинов
+        beans.put(AppConfig.class, config);
+        beans.put(Alphabet.class, alphabet);
         beans.put(TextRepository.class, fileSystemRepository);
-        beans.put(FileService.class, fileService);
+        beans.put(CipherService.class, fileService);
+        beans.put(FileService.class, fileService);      // если где-то просят конкретный класс
         beans.put(CipherController.class, cipherController);
         beans.put(CliApplication.class, cliApplication);
     }
