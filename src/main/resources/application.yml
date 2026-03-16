@@ -1,0 +1,36 @@
+cryptanalyzer:
+  alphabet:
+    # Полный алфавит, которым пользуется Alphabet
+    value: "абвгдеёжзийклмнопрстуфхцчшщъыьэюя.,«»\"':-!? "
+
+  io:
+    charset: "UTF-8"
+    # Размер буфера для чтения/записи больших файлов
+    bufferSize: 8192
+
+  bruteForce:
+    # Включать/выключать режим brute force (на случай урезанной сборки)
+    enabled: true
+    # Вес для пробелов, гласных и пунктуации в scoreSimple()
+    spaceWeight: 3
+    vowelWeight: 1
+    punctuationWeight: 2
+    # Список «типичных» букв для scoreSimple()
+    frequentLetters: "оеаин"
+
+  statistical:
+    enabled: true
+    # Минимальная длина текста, при которой вообще имеет смысл считать статистику
+    minTextLength: 1
+
+  cli:
+    language: "ru"
+    # Показывать приветствие/хелп при старте
+    showHelpOnStart: true
+
+  paths:
+    # Не обязательно использовать прямо сейчас,
+    # но можно потом подхватывать как дефолты в CliApplication
+    defaultInputDir: "input"
+    defaultOutputDir: "output"
+    defaultSampleDir: "samples"
